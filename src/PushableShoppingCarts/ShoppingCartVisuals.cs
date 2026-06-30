@@ -13,6 +13,9 @@ namespace PushableShoppingCarts
         private const string VisualRootName = "P7D2D_ShoppingCartVisual";
         private const string LeftGripName = "P7D2D_Grip_Left";
         private const string RightGripName = "P7D2D_Grip_Right";
+        private const float VisualGroundClearance = 0.08f;
+
+        private static readonly Quaternion VisualLocalRotation = Quaternion.Euler(0f, 180f, 0f);
 
         internal static int RepairActiveShoppingCarts(bool logDetails)
         {
@@ -223,6 +226,7 @@ namespace PushableShoppingCarts
             Transform existing = model.Find(VisualRootName);
             if (existing != null)
             {
+                ApplyVisualRootTransform(model, existing);
                 return existing;
             }
 
@@ -235,11 +239,66 @@ namespace PushableShoppingCarts
             GameObject instance = UnityEngine.Object.Instantiate(prefab);
             instance.name = VisualRootName;
             instance.transform.SetParent(model, worldPositionStays: false);
-            instance.transform.localPosition = new Vector3(0f, -0.05f, 0f);
-            instance.transform.localRotation = Quaternion.identity;
-            instance.transform.localScale = Vector3.one;
+            ApplyVisualRootTransform(model, instance.transform);
             DisableColliders(instance.transform);
             return instance.transform;
+        }
+
+        private static void ApplyVisualRootTransform(Transform model, Transform visualRoot)
+        {
+            if (visualRoot == null)
+            {
+                return;
+            }
+
+            visualRoot.localPosition = Vector3.zero;
+            visualRoot.localRotation = VisualLocalRotation;
+            visualRoot.localScale = Vector3.one;
+            AlignVisualBottomToModelGround(model, visualRoot);
+        }
+
+        private static void AlignVisualBottomToModelGround(Transform model, Transform visualRoot)
+        {
+            if (model == null || visualRoot == null ||
+                !TryGetRendererBottomInModelSpace(model, visualRoot, out float bottomY))
+            {
+                return;
+            }
+
+            Vector3 localPosition = visualRoot.localPosition;
+            localPosition.y += VisualGroundClearance - bottomY;
+            visualRoot.localPosition = localPosition;
+        }
+
+        private static bool TryGetRendererBottomInModelSpace(Transform model, Transform root, out float bottomY)
+        {
+            bottomY = float.MaxValue;
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Bounds bounds = renderers[i].bounds;
+                Vector3 min = bounds.min;
+                Vector3 max = bounds.max;
+                IncludeModelSpaceY(model, new Vector3(min.x, min.y, min.z), ref bottomY);
+                IncludeModelSpaceY(model, new Vector3(min.x, min.y, max.z), ref bottomY);
+                IncludeModelSpaceY(model, new Vector3(min.x, max.y, min.z), ref bottomY);
+                IncludeModelSpaceY(model, new Vector3(min.x, max.y, max.z), ref bottomY);
+                IncludeModelSpaceY(model, new Vector3(max.x, min.y, min.z), ref bottomY);
+                IncludeModelSpaceY(model, new Vector3(max.x, min.y, max.z), ref bottomY);
+                IncludeModelSpaceY(model, new Vector3(max.x, max.y, min.z), ref bottomY);
+                IncludeModelSpaceY(model, new Vector3(max.x, max.y, max.z), ref bottomY);
+            }
+
+            return bottomY < float.MaxValue;
+        }
+
+        private static void IncludeModelSpaceY(Transform model, Vector3 worldPoint, ref float bottomY)
+        {
+            float y = model.InverseTransformPoint(worldPoint).y;
+            if (y < bottomY)
+            {
+                bottomY = y;
+            }
         }
 
         private static Transform EnsureGrip(Transform model, bool left)
