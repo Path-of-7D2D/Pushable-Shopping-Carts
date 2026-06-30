@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configs>
+
+	<append xpath="/items">
+		<item name="vehicleShoppingCartFrame">
+			<property name="Extends" value="partsMaster"/>
+			<property name="CustomIcon" value="ui_game_symbol_shopping_cart"/>
+			<property name="Tags" value="vehiclesSkill"/>
+			<property name="DescriptionKey" value="vehicleShoppingCartFrameDesc"/>
+			<property name="EconomicValue" value="220"/>
+			<property name="Weight" value="0"/>
+			<property name="Group" value="Science,TCScience"/>
+			<property name="SoundPickup" value="ironpipe_grab"/>
+			<property name="SoundPlace" value="ironpipe_place"/>
+		</item>
+
+		<item name="vehicleShoppingCartHull">
+			<property name="Extends" value="partsMaster"/>
+			<property name="CustomIcon" value="ui_game_symbol_shopping_cart"/>
+			<property name="Tags" value="vehiclesSkill"/>
+			<property name="DescriptionKey" value="vehicleShoppingCartHullDesc"/>
+			<property name="EconomicValue" value="350"/>
+			<property name="Weight" value="0"/>
+			<property name="Group" value="Science,TCScience"/>
+			<property name="SoundPickup" value="scrapiron_grab"/>
+			<property name="SoundPlace" value="scrapiron_place"/>
+		</item>
+
+		<item name="vehicleShoppingCartWheel">
+			<property name="Extends" value="partsMaster"/>
+			<property name="CustomIcon" value="ui_game_symbol_shopping_cart"/>
+			<property name="Tags" value="vehiclesSkill"/>
+			<property name="DescriptionKey" value="vehicleShoppingCartWheelDesc"/>
+			<property name="EconomicValue" value="180"/>
+			<property name="Weight" value="0"/>
+			<property name="Group" value="Science,TCScience"/>
+			<property name="SoundPickup" value="scrapiron_grab"/>
+			<property name="SoundPlace" value="scrapiron_place"/>
+		</item>
+
+		<item name="vehicleShoppingCartPlaceable">
+			<property name="Extends" value="vehicleBicyclePlaceable"/>
+			<property name="Tags" value="T0,vehicle,vstorage,canHaveCosmetic"/>
+			<property name="DescriptionKey" value="vehicleShoppingCartPlaceableDesc"/>
+			<property name="CustomIcon" value="ui_game_symbol_shopping_cart"/>
+			<property name="Meshfile" value="#@modfolder:Resources/shoppingcart.unity3d?WheelbarrowPrefab.prefab"/>
+			<property name="EconomicValue" value="1800"/>
+			<property name="TraderStageTemplate" value="vehicleTier1"/>
+			<property name="SoundPickup" value="bike_grab"/>
+			<property name="SoundPlace" value="bike_place"/>
+			<property class="Action1">
+				<property name="Vehicle" value="vehicleShoppingCart"/>
+				<property name="VehicleSize" value="1.1, 1.1, 2.0"/>
+			</property>
+			<effect_group name="vehicleShoppingCartPlaceable" tiered="false">
+				<passive_effect name="ModSlots" operation="base_set" value="2"/>
+				<passive_effect name="ModPowerBonus" operation="base_add" value="200" tags="EconomicValue"/>
+				<passive_effect name="DegradationMax" operation="base_set" value="1200"/>
+			</effect_group>
+		</item>
+	</append>
+
+</configs>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configs>
+	<append xpath="/buffs">
+		<buff name="buffPushableShoppingCartsBurden" name_key="buffPushableShoppingCartsBurdenName" description_key="buffPushableShoppingCartsBurdenDesc" tooltip_key="buffPushableShoppingCartsBurdenTooltip" icon="ui_game_symbol_shopping_cart" icon_color="255,210,80" remove_on_death="true">
+			<stack_type value="replace"/>
+			<duration value="0"/>
+			<display_value value=".shoppingcartMovePenaltyDisplay"/>
+			<display_value_key value="-{0:0}%"/>
+			<effect_group>
+				<triggered_effect trigger="onSelfEnteredGame" action="RemoveBuff" buff="buffPushableShoppingCartsBurden"/>
+			</effect_group>
+		</buff>
+	</append>
+</configs>

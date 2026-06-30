@@ -1,0 +1,93 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>PushableShoppingCarts</AssemblyName>
+    <RootNamespace>PushableShoppingCarts</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <Deterministic>true</Deterministic>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+
+    <Game7D2D Condition="'$(GAME_7D2D)' != ''">$(GAME_7D2D)</Game7D2D>
+    <Game7D2D Condition="'$(Game7D2D)' == ''">C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die</Game7D2D>
+    <Managed7D2D>$(Game7D2D)\7DaysToDie_Data\Managed</Managed7D2D>
+    <ModDeployDir>$(MSBuildProjectDirectory)\..\..\1A-PushableShoppingCarts</ModDeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ModContentFiles Include="$(ModDeployDir)\**\*.*" Exclude="$(ModDeployDir)\$(TargetFileName)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>$(Game7D2D)\Mods\0_TFP_Harmony\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(Managed7D2D)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(Managed7D2D)\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="InControl">
+      <HintPath>$(Managed7D2D)\InControl.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="LogLibrary">
+      <HintPath>$(Managed7D2D)\LogLibrary.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(Managed7D2D)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(Managed7D2D)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>$(Managed7D2D)\UnityEngine.AnimationModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(Managed7D2D)\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.Addressables">
+      <HintPath>$(Managed7D2D)\Unity.Addressables.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="DeployToModFolder" AfterTargets="Build">
+    <MakeDir Directories="$(ModDeployDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModDeployDir)" SkipUnchangedFiles="false" />
+    <Message Importance="high" Text="Deployed $(TargetFileName) -&gt; $(ModDeployDir)" />
+  </Target>
+
+  <Target Name="InstallToGameMods" AfterTargets="Build"
+          Condition="'$(InstallToGame)' != 'false' and Exists('$(Game7D2D)\Mods')">
+    <PropertyGroup>
+      <GameModDir>$(Game7D2D)\Mods\1A-PushableShoppingCarts</GameModDir>
+    </PropertyGroup>
+    <RemoveDir Directories="$(GameModDir)" Condition="Exists('$(GameModDir)')" />
+    <MakeDir Directories="$(GameModDir)" />
+    <Copy SourceFiles="@(ModContentFiles)"
+          DestinationFiles="@(ModContentFiles->'$(GameModDir)\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="false" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameModDir)" SkipUnchangedFiles="false" />
+    <Message Importance="high" Text="Installed mod to game: $(GameModDir)" />
+  </Target>
+
+</Project>

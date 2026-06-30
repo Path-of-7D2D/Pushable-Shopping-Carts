@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xml>
+	<Name value="PushableShoppingCarts" />
+	<DisplayName value="Pushable Shopping Carts" />
+	<Description value="Adds craftable and world-converted pushable shopping carts." />
+	<Author value="Path-of-7D2D" />
+	<Version value="0.1.0" />
+	<Website value="https://github.com/Path-of-7D2D/Pushable-Shopping-Carts" />
+	<!-- The test spawn command ships as a DLL, so the mod must be skipped when
+	     EasyAntiCheat is enabled. -->
+	<SkipWithAntiCheat value="true" />
+</xml>

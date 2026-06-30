@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configs>
+
+	<append xpath="/recipes">
+		<recipe name="vehicleShoppingCartFrame" count="1" craft_time="10" craft_area="workbench" tags="workbenchCrafting,packMuleCrafting">
+			<ingredient name="resourceMetalPipe" count="4"/>
+			<ingredient name="resourceScrapIron" count="20"/>
+			<ingredient name="resourceWood" count="10"/>
+		</recipe>
+
+		<recipe name="vehicleShoppingCartHull" count="1" craft_time="15" craft_area="workbench" tags="workbenchCrafting,packMuleCrafting">
+			<ingredient name="resourceScrapIron" count="100"/>
+		</recipe>
+
+		<recipe name="vehicleShoppingCartPlaceable" count="1" craft_time="25" craft_area="workbench" tags="workbenchCrafting,packMuleCrafting">
+			<ingredient name="vehicleShoppingCartHull" count="1"/>
+			<ingredient name="vehicleShoppingCartFrame" count="1"/>
+			<ingredient name="vehicleShoppingCartWheel" count="4"/>
+		</recipe>
+	</append>
+
+</configs>
