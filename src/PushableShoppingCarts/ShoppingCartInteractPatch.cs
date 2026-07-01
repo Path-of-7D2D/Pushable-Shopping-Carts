@@ -8,6 +8,8 @@ namespace PushableShoppingCarts
     {
         internal const string RemoveWheel = "shoppingcartRemoveWheel";
         internal const string InstallWheel = "shoppingcartInstallWheel";
+        internal const string RemoveWheelIcon = "ui_game_symbol_shopping_cart_wheel_remove";
+        internal const string InstallWheelIcon = "ui_game_symbol_shopping_cart_wheel_install";
 
         internal static bool IsRemoveWheel(string command)
         {
@@ -32,8 +34,8 @@ namespace PushableShoppingCarts
                 return;
             }
 
-            _addCallback(new EntityActivationCommand(ShoppingCartVehicleCommands.RemoveWheel, "wrench"));
-            _addCallback(new EntityActivationCommand(ShoppingCartVehicleCommands.InstallWheel, "repair"));
+            _addCallback(new EntityActivationCommand(ShoppingCartVehicleCommands.RemoveWheel, ShoppingCartVehicleCommands.RemoveWheelIcon));
+            _addCallback(new EntityActivationCommand(ShoppingCartVehicleCommands.InstallWheel, ShoppingCartVehicleCommands.InstallWheelIcon));
         }
     }
 
