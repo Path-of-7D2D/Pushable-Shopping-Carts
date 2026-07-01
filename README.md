@@ -79,7 +79,7 @@ Shopping Cart Wheels cannot be crafted. They must be salvaged from shopping cart
 
 ## World Shopping Carts
 
-Existing `cntShoppingCart*` world blocks gain a Push action. Using Push converts the world prop into a pushable shopping cart.
+Existing `cntShoppingCart*` world blocks show `Press <interact key> to Inspect` after they have been looted. Using Inspect converts the world prop into a pushable shopping cart.
 
 World carts are usually damaged:
 
@@ -123,7 +123,7 @@ Useful commands:
 - `sc fixed` spawns a fully fixed pushable cart in front of you.
 - `sc item` gives a fixed placeable cart item.
 - `sc wheel 4` gives four Shopping Cart Wheel items.
-- `sc world` spawns a vanilla world shopping cart block. Look at it and use Push to convert it.
+- `sc world` spawns a vanilla world shopping cart block. Look at it and use Inspect to convert it.
 - `sc push` grabs the nearest active cart for push-position testing.
 - `sc tag` toggles the nearest active cart icon. Use `sc tag on` or `sc tag off` to force a state.
 - `sc drop` releases the currently pushed cart.

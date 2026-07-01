@@ -9,8 +9,8 @@ vehicleShoppingCartHullDesc,items,Item,,,,The basket and lower body of a shoppin
 vehicleShoppingCartWheel,items,Item,,,,Shopping Cart Wheel
 vehicleShoppingCartWheelDesc,items,Item,,,,A salvaged shopping cart wheel. It cannot be crafted.
 shoppingcartTooltipPush,UI,Use Prompt,,,,{0} to Push {1}
-shoppingcartBlockPush,UI,Use Prompt,,,,Push
-shoppingcartBlockTooltipPush,UI,Use Prompt,,,,Push
+shoppingcartBlockPush,UI,Use Prompt,,,,Inspect
+shoppingcartBlockTooltipInspect,UI,Use Prompt,,,,Press {0} to Inspect
 shoppingcartRemoveWheel,UI,Use Prompt,,,,Remove Wheel
 shoppingcartInstallWheel,UI,Use Prompt,,,,Add Wheel
 entitycommand_shoppingcartRemoveWheel,UI,Use Prompt,,,,Remove Wheel

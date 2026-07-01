@@ -69,7 +69,7 @@ Restart 7D2D after DLL, XML, localization, or icon changes. The running client w
 - `ShoppingCartState.cs` persists missing-wheel, rotted-frame, and world-cart state in vehicle item metadata under `p7d2d.shoppingcart.v1`.
 - `ShoppingCartTagging.cs` persists tag state under `p7d2d.shoppingcart.tag.v1` and registers or removes the cart nav object.
 - `ShoppingCartInteractPatch.cs` replaces ride/drive activation with push behaviour, removes lock/unlock/keypad commands, and adds Remove Wheel/Add Wheel plus Tag/Untag commands.
-- `ShoppingCartBlockInteractionPatch.cs` adds Push to vanilla `cntShoppingCart*` world blocks and converts those blocks into pushable vehicles.
+- `ShoppingCartBlockInteractionPatch.cs` adds an Inspect prompt and action to vanilla `cntShoppingCart*` world blocks and converts those blocks into pushable vehicles.
 - `ShoppingCartWheelActions.cs` validates and applies wheel removal or installation.
 - `ShoppingCartSpawnService.cs` spawns fixed carts, world blocks, and converted carts.
 - `ShoppingCartInventory.cs` handles item lookup, give, count, consume, and wrench-tool detection.
@@ -141,7 +141,7 @@ After a build and game restart, validate the paths touched by your change:
 - Jump and attack are blocked while pushing.
 - Sprint and walk both respect dirt and sand penalties.
 - Releasing the cart re-enables physics and lets the cart settle naturally.
-- `sc world` creates a world cart block; using Push converts it into a damaged pushable cart.
+- `sc world` creates a world cart block; the block shows the localized Inspect prompt with the current interact binding, and using Inspect converts it into a damaged pushable cart.
 - Broken converted carts do not get compass/on-screen icons by default.
 - A fixed cart creates its icon on first push, unless it was explicitly untagged.
 - Tag Cart/Untag Cart toggles the icon, and an explicitly untagged cart remains untagged after release/reload.
