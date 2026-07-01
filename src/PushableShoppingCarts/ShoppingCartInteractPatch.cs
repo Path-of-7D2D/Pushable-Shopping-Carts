@@ -8,8 +8,8 @@ namespace PushableShoppingCarts
     {
         internal const string RemoveWheel = "shoppingcartRemoveWheel";
         internal const string InstallWheel = "shoppingcartInstallWheel";
-        internal const string RemoveWheelIcon = "ui_game_symbol_shopping_cart_wheel_remove";
-        internal const string InstallWheelIcon = "ui_game_symbol_shopping_cart_wheel_install";
+        internal const string RemoveWheelIcon = "shopping_cart_wheel_remove";
+        internal const string InstallWheelIcon = "shopping_cart_wheel_install";
 
         internal static bool IsRemoveWheel(string command)
         {
