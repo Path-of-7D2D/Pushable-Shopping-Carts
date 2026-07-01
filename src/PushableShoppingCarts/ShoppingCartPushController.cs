@@ -26,6 +26,7 @@ namespace PushableShoppingCarts
         internal const float DefaultHeightLift = -0.08f;   // lowered so the aligned cart visual rides near the ground
         internal const float DefaultTiltDegrees = 15f;     // forward tilt onto the wheel (rear legs lift)
         internal const float GroundClearance = 0.06f;
+        internal const int GroundRaycastMask = 1073807360;
         internal const float WheelRadius = 0.235f;         // artist wheel ~0.47m diameter
         internal const float YawOffset = 0f;               // cart-forward vs entity-forward (model faces +Z)
         internal const float TurnSmoothTime = 0.22f;       // higher = lazier turning
@@ -703,7 +704,7 @@ namespace PushableShoppingCarts
         {
             Vector3 rayOrigin = position - Origin.position + Vector3.up * 6f;
             RaycastHit hit;
-            if (Physics.Raycast(rayOrigin, Vector3.down, out hit, 18f, ~0, QueryTriggerInteraction.Ignore))
+            if (Physics.Raycast(rayOrigin, Vector3.down, out hit, 18f, GroundRaycastMask, QueryTriggerInteraction.Ignore))
             {
                 position.y = hit.point.y + Origin.position.y + GroundClearance;
             }

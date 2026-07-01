@@ -272,25 +272,30 @@ namespace PushableShoppingCarts
             Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
             for (int i = 0; i < renderers.Length; i++)
             {
-                Bounds bounds = renderers[i].bounds;
-                Vector3 min = bounds.min;
-                Vector3 max = bounds.max;
-                IncludeModelSpaceY(model, new Vector3(min.x, min.y, min.z), ref bottomY);
-                IncludeModelSpaceY(model, new Vector3(min.x, min.y, max.z), ref bottomY);
-                IncludeModelSpaceY(model, new Vector3(min.x, max.y, min.z), ref bottomY);
-                IncludeModelSpaceY(model, new Vector3(min.x, max.y, max.z), ref bottomY);
-                IncludeModelSpaceY(model, new Vector3(max.x, min.y, min.z), ref bottomY);
-                IncludeModelSpaceY(model, new Vector3(max.x, min.y, max.z), ref bottomY);
-                IncludeModelSpaceY(model, new Vector3(max.x, max.y, min.z), ref bottomY);
-                IncludeModelSpaceY(model, new Vector3(max.x, max.y, max.z), ref bottomY);
+                IncludeRendererLocalBoundsY(model, renderers[i], ref bottomY);
             }
 
             return bottomY < float.MaxValue;
         }
 
-        private static void IncludeModelSpaceY(Transform model, Vector3 worldPoint, ref float bottomY)
+        private static void IncludeRendererLocalBoundsY(Transform model, Renderer renderer, ref float bottomY)
         {
-            float y = model.InverseTransformPoint(worldPoint).y;
+            Bounds bounds = renderer.localBounds;
+            Vector3 min = bounds.min;
+            Vector3 max = bounds.max;
+            IncludeModelSpaceY(model, renderer.transform, new Vector3(min.x, min.y, min.z), ref bottomY);
+            IncludeModelSpaceY(model, renderer.transform, new Vector3(min.x, min.y, max.z), ref bottomY);
+            IncludeModelSpaceY(model, renderer.transform, new Vector3(min.x, max.y, min.z), ref bottomY);
+            IncludeModelSpaceY(model, renderer.transform, new Vector3(min.x, max.y, max.z), ref bottomY);
+            IncludeModelSpaceY(model, renderer.transform, new Vector3(max.x, min.y, min.z), ref bottomY);
+            IncludeModelSpaceY(model, renderer.transform, new Vector3(max.x, min.y, max.z), ref bottomY);
+            IncludeModelSpaceY(model, renderer.transform, new Vector3(max.x, max.y, min.z), ref bottomY);
+            IncludeModelSpaceY(model, renderer.transform, new Vector3(max.x, max.y, max.z), ref bottomY);
+        }
+
+        private static void IncludeModelSpaceY(Transform model, Transform pointRoot, Vector3 localPoint, ref float bottomY)
+        {
+            float y = model.InverseTransformPoint(pointRoot.TransformPoint(localPoint)).y;
             if (y < bottomY)
             {
                 bottomY = y;
@@ -341,25 +346,30 @@ namespace PushableShoppingCarts
             bool initialized = false;
             for (int i = 0; i < renderers.Length; i++)
             {
-                Bounds rendererBounds = renderers[i].bounds;
-                Vector3 min = rendererBounds.min;
-                Vector3 max = rendererBounds.max;
-                IncludeModelSpaceBoundsPoint(model, new Vector3(min.x, min.y, min.z), ref bounds, ref initialized);
-                IncludeModelSpaceBoundsPoint(model, new Vector3(min.x, min.y, max.z), ref bounds, ref initialized);
-                IncludeModelSpaceBoundsPoint(model, new Vector3(min.x, max.y, min.z), ref bounds, ref initialized);
-                IncludeModelSpaceBoundsPoint(model, new Vector3(min.x, max.y, max.z), ref bounds, ref initialized);
-                IncludeModelSpaceBoundsPoint(model, new Vector3(max.x, min.y, min.z), ref bounds, ref initialized);
-                IncludeModelSpaceBoundsPoint(model, new Vector3(max.x, min.y, max.z), ref bounds, ref initialized);
-                IncludeModelSpaceBoundsPoint(model, new Vector3(max.x, max.y, min.z), ref bounds, ref initialized);
-                IncludeModelSpaceBoundsPoint(model, new Vector3(max.x, max.y, max.z), ref bounds, ref initialized);
+                IncludeRendererLocalBounds(model, renderers[i], ref bounds, ref initialized);
             }
 
             return initialized;
         }
 
-        private static void IncludeModelSpaceBoundsPoint(Transform model, Vector3 worldPoint, ref Bounds bounds, ref bool initialized)
+        private static void IncludeRendererLocalBounds(Transform model, Renderer renderer, ref Bounds bounds, ref bool initialized)
         {
-            Vector3 point = model.InverseTransformPoint(worldPoint);
+            Bounds rendererBounds = renderer.localBounds;
+            Vector3 min = rendererBounds.min;
+            Vector3 max = rendererBounds.max;
+            IncludeModelSpaceBoundsPoint(model, renderer.transform, new Vector3(min.x, min.y, min.z), ref bounds, ref initialized);
+            IncludeModelSpaceBoundsPoint(model, renderer.transform, new Vector3(min.x, min.y, max.z), ref bounds, ref initialized);
+            IncludeModelSpaceBoundsPoint(model, renderer.transform, new Vector3(min.x, max.y, min.z), ref bounds, ref initialized);
+            IncludeModelSpaceBoundsPoint(model, renderer.transform, new Vector3(min.x, max.y, max.z), ref bounds, ref initialized);
+            IncludeModelSpaceBoundsPoint(model, renderer.transform, new Vector3(max.x, min.y, min.z), ref bounds, ref initialized);
+            IncludeModelSpaceBoundsPoint(model, renderer.transform, new Vector3(max.x, min.y, max.z), ref bounds, ref initialized);
+            IncludeModelSpaceBoundsPoint(model, renderer.transform, new Vector3(max.x, max.y, min.z), ref bounds, ref initialized);
+            IncludeModelSpaceBoundsPoint(model, renderer.transform, new Vector3(max.x, max.y, max.z), ref bounds, ref initialized);
+        }
+
+        private static void IncludeModelSpaceBoundsPoint(Transform model, Transform pointRoot, Vector3 localPoint, ref Bounds bounds, ref bool initialized)
+        {
+            Vector3 point = model.InverseTransformPoint(pointRoot.TransformPoint(localPoint));
             if (!initialized)
             {
                 bounds = new Bounds(point, Vector3.zero);
