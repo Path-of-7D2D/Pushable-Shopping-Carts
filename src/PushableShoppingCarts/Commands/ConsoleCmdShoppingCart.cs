@@ -34,6 +34,8 @@ namespace PushableShoppingCarts.Commands
                 "  sc wheel [count]                 give shopping cart wheel item(s)\n" +
                 "  sc world [distance] [blockName]  spawn a vanilla world shopping cart block\n" +
                 "  sc push [offset] [lift] [tilt]   push nearest active cart\n" +
+                "  sc hands x y z                   tune hand rotation while pushing\n" +
+                "  sc handpos x y z                 tune grip-local hand offset while pushing\n" +
                 "  sc drop                          release the pushed cart\n" +
                 "  sc debug                         log active cart state\n" +
                 "  sc cleanup                       remove active and unloaded cart vehicles\n" +
@@ -94,6 +96,12 @@ namespace PushableShoppingCarts.Commands
             if (IsSubcommand(sub, "drop") || IsSubcommand(sub, "release") || IsSubcommand(sub, "park"))
             {
                 DropCurrent();
+                return;
+            }
+
+            if (IsSubcommand(sub, "hands") || IsSubcommand(sub, "handpos"))
+            {
+                TuneHands(_params);
                 return;
             }
 
@@ -350,6 +358,31 @@ namespace PushableShoppingCarts.Commands
             {
                 Output("No shopping cart is being pushed.");
             }
+        }
+
+        private static void TuneHands(List<string> parameters)
+        {
+            bool position = IsSubcommand(parameters[0], "handpos");
+            if (parameters.Count >= 4 &&
+                float.TryParse(parameters[1], out float x) &&
+                float.TryParse(parameters[2], out float y) &&
+                float.TryParse(parameters[3], out float z))
+            {
+                if (position)
+                {
+                    PushableShoppingCartsPush.HandOffset = new Vector3(x, y, z);
+                }
+                else
+                {
+                    PushableShoppingCartsPush.HandEuler = new Vector3(x, y, z);
+                }
+
+                PushableShoppingCartsPush.RefreshHandIK();
+            }
+
+            Output("Hand rot=" + Format(PushableShoppingCartsPush.HandEuler) +
+                " offset=" + Format(PushableShoppingCartsPush.HandOffset) +
+                (PushableShoppingCartsPush.IsActive ? "" : " (push a cart to see it update)"));
         }
 
         private static void CleanupShoppingCarts()

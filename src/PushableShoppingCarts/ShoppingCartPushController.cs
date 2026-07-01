@@ -41,8 +41,8 @@ namespace PushableShoppingCarts
         internal const float MaxMovePenalty = 0.75f;
 
         // Hand IK rotation/offset in grip-local space. The left hand is mirrored across the cart centreline.
-        internal static Vector3 HandEuler = new Vector3(8f, 170f, 14f);
-        internal static Vector3 HandOffset = new Vector3(0.05f, 0.03f, -0.08f);
+        internal static Vector3 HandEuler = new Vector3(68f, 95f, 0f);
+        internal static Vector3 HandOffset = new Vector3(0.03f, 0.01f, -0.02f);
 
         internal static EntityVehicle Current { get; private set; }
         internal static float FrontOffset = DefaultFrontOffset;
@@ -707,20 +707,6 @@ namespace PushableShoppingCarts
             {
                 position.y = hit.point.y + Origin.position.y + GroundClearance;
             }
-        }
-
-        private static Transform FindContains(Transform root, string namePart)
-        {
-            Transform[] all = root.GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < all.Length; i++)
-            {
-                if (all[i].name.IndexOf(namePart, System.StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    return all[i];
-                }
-            }
-
-            return null;
         }
 
         private static bool ValidateActiveState(EntityPlayerLocal player, bool releaseIfInvalid)

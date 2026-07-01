@@ -14,6 +14,8 @@ namespace PushableShoppingCarts
         private const string LeftGripName = "P7D2D_Grip_Left";
         private const string RightGripName = "P7D2D_Grip_Right";
         private const float VisualGroundClearance = 0.08f;
+        private const float HandleBackInset = 0.10f;
+        private const float HandleBelowTop = 0.12f;
 
         private static readonly Quaternion VisualLocalRotation = Quaternion.Euler(0f, 180f, 0f);
 
@@ -156,12 +158,6 @@ namespace PushableShoppingCarts
             if (model == null)
             {
                 return null;
-            }
-
-            Transform existing = FindContains(model, left ? "Grip_Left" : "Grip_Right");
-            if (existing != null)
-            {
-                return existing;
             }
 
             return EnsureGrip(model, left);
@@ -307,14 +303,71 @@ namespace PushableShoppingCarts
             Transform grip = model.Find(name);
             if (grip != null)
             {
+                grip.localPosition = GetShoppingCartGripPosition(model, left);
+                grip.localRotation = Quaternion.identity;
                 return grip;
             }
 
             GameObject go = new GameObject(name);
             go.transform.SetParent(model, worldPositionStays: false);
-            go.transform.localPosition = new Vector3(left ? -0.42f : 0.42f, 0.86f, -0.95f);
+            go.transform.localPosition = GetShoppingCartGripPosition(model, left);
             go.transform.localRotation = Quaternion.identity;
             return go.transform;
+        }
+
+        private static Vector3 GetShoppingCartGripPosition(Transform model, bool left)
+        {
+            if (TryGetVisualBoundsInModelSpace(model, out Bounds bounds))
+            {
+                float halfWidth = Mathf.Clamp(bounds.extents.x * 0.68f, 0.32f, 0.52f);
+                float y = bounds.max.y - HandleBelowTop;
+                float z = bounds.min.z + HandleBackInset;
+                return new Vector3(left ? -halfWidth : halfWidth, y, z);
+            }
+
+            return new Vector3(left ? -0.38f : 0.38f, 0.92f, -0.78f);
+        }
+
+        private static bool TryGetVisualBoundsInModelSpace(Transform model, out Bounds bounds)
+        {
+            bounds = default(Bounds);
+            Transform visualRoot = model != null ? model.Find(VisualRootName) : null;
+            if (model == null || visualRoot == null)
+            {
+                return false;
+            }
+
+            Renderer[] renderers = visualRoot.GetComponentsInChildren<Renderer>(true);
+            bool initialized = false;
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Bounds rendererBounds = renderers[i].bounds;
+                Vector3 min = rendererBounds.min;
+                Vector3 max = rendererBounds.max;
+                IncludeModelSpaceBoundsPoint(model, new Vector3(min.x, min.y, min.z), ref bounds, ref initialized);
+                IncludeModelSpaceBoundsPoint(model, new Vector3(min.x, min.y, max.z), ref bounds, ref initialized);
+                IncludeModelSpaceBoundsPoint(model, new Vector3(min.x, max.y, min.z), ref bounds, ref initialized);
+                IncludeModelSpaceBoundsPoint(model, new Vector3(min.x, max.y, max.z), ref bounds, ref initialized);
+                IncludeModelSpaceBoundsPoint(model, new Vector3(max.x, min.y, min.z), ref bounds, ref initialized);
+                IncludeModelSpaceBoundsPoint(model, new Vector3(max.x, min.y, max.z), ref bounds, ref initialized);
+                IncludeModelSpaceBoundsPoint(model, new Vector3(max.x, max.y, min.z), ref bounds, ref initialized);
+                IncludeModelSpaceBoundsPoint(model, new Vector3(max.x, max.y, max.z), ref bounds, ref initialized);
+            }
+
+            return initialized;
+        }
+
+        private static void IncludeModelSpaceBoundsPoint(Transform model, Vector3 worldPoint, ref Bounds bounds, ref bool initialized)
+        {
+            Vector3 point = model.InverseTransformPoint(worldPoint);
+            if (!initialized)
+            {
+                bounds = new Bounds(point, Vector3.zero);
+                initialized = true;
+                return;
+            }
+
+            bounds.Encapsulate(point);
         }
 
         private static List<Transform> FindWheelTransforms(Transform root)
@@ -419,20 +472,6 @@ namespace PushableShoppingCarts
             }
 
             return bounds;
-        }
-
-        private static Transform FindContains(Transform root, string namePart)
-        {
-            Transform[] all = root.GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < all.Length; i++)
-            {
-                if (all[i].name.IndexOf(namePart, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    return all[i];
-                }
-            }
-
-            return null;
         }
 
         private static string FormatTransform(Transform transform)
