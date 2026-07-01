@@ -1,16 +1,19 @@
 # Contributors
 
-This document is for anyone modifying `PushableShoppingCarts`. The consumer-facing install and usage instructions live in `README.md`.
+This document is for developers modifying Pushable Shopping Carts. Player-facing install and usage instructions live in [README.md](README.md).
 
 ## Repository Layout
 
-- `1A-PushableShoppingCarts/` - deployable mod folder.
-- `1A-PushableShoppingCarts/Config/` - XML appends and localization.
+- `1A-PushableShoppingCarts/` - deployable mod folder shipped in releases.
+- `1A-PushableShoppingCarts/Config/` - XML appends for entity classes, vehicles, items, recipes, loot storage, buffs, navigation, and localization.
+- `1A-PushableShoppingCarts/ItemIcons/` - item icon PNGs.
+- `1A-PushableShoppingCarts/UIAtlases/` - icon atlas copies used by item and action-wheel UI.
 - `1A-PushableShoppingCarts/Resources/shoppingcart.unity3d` - packaged vehicle scaffold bundle.
-- `1A-PushableShoppingCarts/PushableShoppingCarts.dll` - built gameplay and command DLL.
-- `src/PushableShoppingCarts/` - C# source for Harmony patches, commands, visual repair, wheel state, and push behavior.
+- `1A-PushableShoppingCarts/PushableShoppingCarts.dll` - built gameplay, Harmony patch, and console-command DLL.
+- `src/PushableShoppingCarts/` - C# source.
+- `.github/workflows/release.yml` - manual GitHub release workflow.
 
-## Build Workflow
+## Build And Deploy
 
 Run from the repository root:
 
@@ -18,42 +21,147 @@ Run from the repository root:
 dotnet build src\PushableShoppingCarts\PushableShoppingCarts.csproj -v:minimal
 ```
 
-The C# project copies `PushableShoppingCarts.dll` into `1A-PushableShoppingCarts`. If a local 7D2D install exists at the default Steam path, it also mirrors the deployable folder to `Mods\1A-PushableShoppingCarts`.
+The build:
 
-The current visual approach uses the packaged vehicle scaffold for 7D2D vehicle transforms and attaches the vanilla grocery-cart prefab at runtime. There is no Unity source project in this repo yet; if the scaffold or wheel pivots need dedicated art work later, add the Unity project and builder in a separate, explicit asset-pipeline change.
+- Compiles `PushableShoppingCarts.dll`.
+- Copies the DLL into `1A-PushableShoppingCarts`.
+- Reinstalls the full deployable mod folder into the default Steam game path when `Mods` exists.
+
+Default live install target:
+
+```text
+C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\1A-PushableShoppingCarts
+```
+
+Useful build options:
+
+- Set `GAME_7D2D` to point at a non-default 7D2D install.
+- Pass `/p:InstallToGame=false` when you want to build without touching the live game folder.
+
+Examples:
+
+```powershell
+$env:GAME_7D2D = "D:\SteamLibrary\steamapps\common\7 Days To Die"
+dotnet build src\PushableShoppingCarts\PushableShoppingCarts.csproj -v:minimal
+
+dotnet build src\PushableShoppingCarts\PushableShoppingCarts.csproj -v:minimal /p:InstallToGame=false
+```
+
+Restart 7D2D after DLL, XML, localization, or icon changes. The running client will not reload those files automatically.
+
+## Mod Content Map
+
+- `Config/entityclasses.xml` defines `vehicleShoppingCart` and points it at the shopping cart vehicle and loot list.
+- `Config/vehicles.xml` defines the vehicle scaffold, storage module, and vehicle tuning.
+- `Config/items.xml` defines `vehicleShoppingCartPlaceable`, `vehicleShoppingCartFrame`, `vehicleShoppingCartHull`, and `vehicleShoppingCartWheel`.
+- `Config/recipes.xml` defines frame, hull, and fixed-cart recipes.
+- `Config/loot.xml` defines the cart storage container as `size="10,2"` for 20 slots.
+- `Config/buffs.xml` defines the pushing burden buff and displayed penalty cvar.
+- `Config/Localization.csv` defines item names, prompts, wheel commands, and buff text.
+
+## Source Map
+
+- `ShoppingCartModApi.cs` applies Harmony patches and starts runtime repair/push behaviours.
+- `ShoppingCartVisuals.cs` attaches the vanilla grocery cart visual, hides scaffold renderers, creates handle grips, manages wheel visibility, and stabilizes physics.
+- `ShoppingCartPushController.cs` owns walk-behind pushing, hand IK, wheel spinning, terrain/cargo/damage penalties, release physics, and push-state validation.
+- `ShoppingCartInputLockPatches.cs` blocks jump/attack while pushing and applies the movement penalty through `EntityPlayerLocal.GetSpeedModifier`.
+- `ShoppingCartState.cs` persists missing-wheel, rotted-frame, and world-cart state in vehicle item metadata under `p7d2d.shoppingcart.v1`.
+- `ShoppingCartInteractPatch.cs` replaces ride/drive activation with push behaviour and adds Remove Wheel/Add Wheel commands.
+- `ShoppingCartBlockInteractionPatch.cs` adds Push to vanilla `cntShoppingCart*` world blocks and converts those blocks into pushable vehicles.
+- `ShoppingCartWheelActions.cs` validates and applies wheel removal or installation.
+- `ShoppingCartSpawnService.cs` spawns fixed carts, world blocks, and converted carts.
+- `ShoppingCartInventory.cs` handles item lookup, give, count, consume, and wrench-tool detection.
+- `Commands/ConsoleCmdShoppingCart.cs` exposes the `sc`, `shoppingcart`, and `spawnshoppingcart` console commands.
+- `ShoppingCartPlacementPreviewPatch.cs` fixes the placeable cart preview model.
+
+## Key Tuning Values
+
+These values are current implementation details, not public API:
+
+- Cart storage: `Config/loot.xml`, `vehicleShoppingCart`, `size="10,2"`.
+- Missing wheel penalty: `0.25` per missing wheel in `ShoppingCartState.cs`.
+- Rotted frame penalty: `0.15` in `ShoppingCartState.cs`.
+- World-cart missing wheel weighting: 62% four missing wheels, 20% three, 12% two, 6% one.
+- Rotted frame chance: 40% normally, 70% for tipped cart block names.
+- Dirt terrain penalty: `0.50` in `ShoppingCartPushController.cs`.
+- Sand/desert terrain penalty: `0.75` in `ShoppingCartPushController.cs`.
+- Cargo penalty: 5% baseline through five filled slots, then roughly 1% per filled slot total, capped with other penalties.
+- Total push movement penalty cap: `0.75`.
+- Push ground clearance: `0.02m`.
+- Default push offset/lift/tilt: `1.25`, `-0.08`, `0`.
 
 ## In-Game Test Commands
 
+Open the console after loading a world:
+
 ```text
-sc fixed
-sc item
-sc wheel 4
-sc world
-sc push
-sc drop
-sc debug
-sc cleanup
+sc fixed [distance]              spawn a fully fixed pushable cart
+sc item [count]                  give fixed shopping cart item(s)
+sc wheel [count]                 give shopping cart wheel item(s)
+sc world [distance] [blockName]  spawn a vanilla world shopping cart block
+sc push [offset] [lift] [tilt]   push nearest active cart
+sc hands x y z                   tune hand rotation while pushing
+sc handpos x y z                 tune grip-local hand offset while pushing
+sc drop                          release the pushed cart
+sc debug                         log active cart state
+sc cleanup                       remove active and unloaded cart vehicles
 ```
 
-Useful notes:
+Server/internal command paths:
 
-- `sc fixed` spawns a fully repaired pushable shopping cart.
-- `sc item` gives the fixed placeable cart item.
-- `sc wheel 4` gives test wheel items.
-- `sc world` spawns a vanilla shopping-cart block; look at it and use Push to convert it.
-- `sc cleanup` removes active and unloaded shopping-cart vehicles.
-- Restart 7D2D after DLL or localization changes.
+```text
+sc fixedat x y z yaw
+sc worldat blockName x y z [rotation]
+sc convert x y z
+sc removewheel entityId
+sc installwheel entityId
+```
 
-## Implementation Notes
+Useful aliases:
 
-- The shopping-cart entity is `vehicleShoppingCart`.
-- The placeable item is `vehicleShoppingCartPlaceable`.
-- The wheel item is `vehicleShoppingCartWheel`; it intentionally has no recipe.
-- `ShoppingCartPushController.cs` owns the walk-behind push state and terrain penalties.
-- `ShoppingCartState.cs` persists missing-wheel and rotted-frame state on the vehicle item metadata.
-- `ShoppingCartBlockInteractionPatch.cs` adds Push to existing vanilla `cntShoppingCart*` blocks.
-- `ShoppingCartInteractPatch.cs` replaces ride/drive activation with push behavior and adds wheel actions.
-- `ShoppingCartVisuals.cs` attaches the vanilla cart visual and hides wheels according to state.
+- `shoppingcart`
+- `spawnshoppingcart`
+- `sc`
+
+## Manual Test Checklist
+
+After a build and game restart, validate the paths touched by your change:
+
+- `sc fixed` spawns a fixed cart with the red shopping cart visual.
+- `sc item` gives the placeable item, and placement uses the cart preview.
+- Cart storage opens with 20 slots.
+- Push starts from behind the cart and the hands land on the handle.
+- Jump and attack are blocked while pushing.
+- Sprint and walk both respect dirt and sand penalties.
+- Releasing the cart re-enables physics and lets the cart settle naturally.
+- `sc world` creates a world cart block; using Push converts it into a damaged pushable cart.
+- Remove Wheel works only while holding a wrench, ratchet, or impact driver.
+- Add Wheel consumes one Shopping Cart Wheel and restores a missing wheel.
+- Action-wheel labels localize as `Remove Wheel` and `Add Wheel`.
+- `sc cleanup` removes active and unloaded shopping cart vehicles.
+
+## Visual And Physics Notes
+
+The repo currently uses a packaged vehicle scaffold for the engine-facing vehicle hierarchy, then attaches the vanilla `@:Entities/LootContainers/groceryCartEmptyPrefab.prefab` visual at runtime.
+
+There is no Unity source project in this repo yet. If the scaffold, wheel pivots, or custom mesh pipeline need dedicated asset work later, add the Unity project and builder as a separate asset-pipeline change.
+
+The visible wheel transforms are discovered from the attached vanilla visual. The runtime also keeps the scaffold vehicle physics stable enough to behave like a four-wheel cart when released.
+
+## Release Workflow
+
+Releases are created with `.github/workflows/release.yml`.
+
+The workflow is manual:
+
+1. Run the `Release` workflow.
+2. Enter a `version_tag`, for example `v0.1.0`.
+3. The workflow validates the deployable folder, DLL, and resource bundle.
+4. It zips `1A-PushableShoppingCarts`.
+5. It generates changelog notes with `Path-of-7D2D/Changelog-Generator`.
+6. It publishes a GitHub release with the zip attached.
+
+Before publishing, ensure the deployable folder is current and committed.
 
 ## Git Hygiene
 
@@ -67,9 +175,14 @@ Do commit intentional deployable outputs when they change:
 
 - `1A-PushableShoppingCarts/PushableShoppingCarts.dll`
 - `1A-PushableShoppingCarts/Resources/shoppingcart.unity3d`
+- `1A-PushableShoppingCarts/ItemIcons/*.png`
+- `1A-PushableShoppingCarts/UIAtlases/**/*.png`
+- `1A-PushableShoppingCarts/Config/*.xml`
+- `1A-PushableShoppingCarts/Config/Localization.csv`
 
-Before publishing, run:
+Before pushing a code or config change, run:
 
 ```powershell
 dotnet build src\PushableShoppingCarts\PushableShoppingCarts.csproj -v:minimal
+git diff --check
 ```
