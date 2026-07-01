@@ -145,6 +145,7 @@ After a build and game restart, validate the paths touched by your change:
 - Broken converted carts do not get compass/on-screen icons by default.
 - A fixed cart creates its icon on first push, unless it was explicitly untagged.
 - Tag Cart/Untag Cart toggles the icon, and an explicitly untagged cart remains untagged after release/reload.
+- Tagging does not leave a separate vanilla white vehicle marker on the compass.
 - Remove Wheel works only while holding a wrench, ratchet, or impact driver.
 - Add Wheel consumes one Shopping Cart Wheel and restores a missing wheel.
 - Action-wheel labels localize as `Remove Wheel`, `Add Wheel`, `Tag Cart`, and `Untag Cart`.

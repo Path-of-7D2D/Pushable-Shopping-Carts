@@ -255,4 +255,52 @@ namespace PushableShoppingCarts
             return false;
         }
     }
+
+    [Preserve]
+    [HarmonyPatch(typeof(XUiC_MapArea), nameof(XUiC_MapArea.RefreshVehiclePositionWaypoint))]
+    internal static class ShoppingCartVehicleWaypointRefreshPatch
+    {
+        [Preserve]
+        private static bool Prefix(EntityVehicle _vehicle)
+        {
+            if (!ShoppingCartVisuals.IsShoppingCart(_vehicle))
+            {
+                return true;
+            }
+
+            ShoppingCartTagging.RemoveVanillaVehicleWaypoint(_vehicle);
+            ShoppingCartTagging.RefreshNavObject(_vehicle);
+            return false;
+        }
+    }
+
+    [Preserve]
+    [HarmonyPatch(typeof(WaypointCollection), nameof(WaypointCollection.UpdateEntityVehicleWayPoint))]
+    internal static class ShoppingCartVehicleWaypointUpdatePatch
+    {
+        [Preserve]
+        private static bool Prefix(WaypointCollection __instance, EntityVehicle vehicle)
+        {
+            if (!ShoppingCartVisuals.IsShoppingCart(vehicle))
+            {
+                return true;
+            }
+
+            ShoppingCartTagging.RemoveShoppingCartVehicleWaypoints(__instance);
+            ShoppingCartTagging.RefreshNavObject(vehicle);
+            return false;
+        }
+    }
+
+    [Preserve]
+    [HarmonyPatch(typeof(WaypointCollection), nameof(WaypointCollection.SetEntityVehicleWaypointFromVehicleManager))]
+    internal static class ShoppingCartVehicleWaypointListPatch
+    {
+        [Preserve]
+        private static void Prefix(WaypointCollection __instance, List<(int entityId, UnityEngine.Vector3 position)> _positions)
+        {
+            ShoppingCartTagging.RemoveShoppingCartVehicleWaypoints(__instance);
+            ShoppingCartTagging.FilterShoppingCartVehiclePositions(_positions);
+        }
+    }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PushableShoppingCarts
@@ -104,6 +105,8 @@ namespace PushableShoppingCarts
                 return;
             }
 
+            RemoveVanillaVehicleWaypoint(vehicle);
+
             if (GameManager.IsDedicatedServer || GameManager.Instance?.World?.GetPrimaryPlayer() == null)
             {
                 Unregister(vehicle);
@@ -128,6 +131,121 @@ namespace PushableShoppingCarts
             {
                 vehicle.NavObject.IsActive = true;
             }
+        }
+
+        internal static void RemoveVanillaVehicleWaypoint(EntityVehicle vehicle)
+        {
+            if (vehicle != null)
+            {
+                RemoveVanillaVehicleWaypoint(vehicle.entityId);
+            }
+        }
+
+        internal static void RemoveVanillaVehicleWaypoint(int entityId)
+        {
+            EntityPlayerLocal player = GameManager.Instance?.World?.GetPrimaryPlayer();
+            player?.Waypoints?.TryRemoveLastKnownPositionWaypoint(entityId);
+        }
+
+        internal static void RemoveShoppingCartVehicleWaypoints(WaypointCollection waypoints)
+        {
+            if (waypoints == null)
+            {
+                return;
+            }
+
+            for (int i = waypoints.Collection.list.Count - 1; i >= 0; i--)
+            {
+                Waypoint waypoint = waypoints.Collection.list[i];
+                if (!IsShoppingCartVehicleWaypoint(waypoint))
+                {
+                    continue;
+                }
+
+                waypoints.Collection.Remove(waypoint);
+                if (waypoint.navObject != null && NavObjectManager.Instance != null)
+                {
+                    NavObjectManager.Instance.UnRegisterNavObject(waypoint.navObject);
+                }
+            }
+        }
+
+        internal static void FilterShoppingCartVehiclePositions(List<(int entityId, Vector3 position)> positions)
+        {
+            if (positions == null)
+            {
+                return;
+            }
+
+            for (int i = positions.Count - 1; i >= 0; i--)
+            {
+                if (IsShoppingCartEntityId(positions[i].entityId))
+                {
+                    positions.RemoveAt(i);
+                }
+            }
+        }
+
+        internal static bool IsShoppingCartEntityId(int entityId)
+        {
+            World world = GameManager.Instance?.World;
+            EntityVehicle activeVehicle = world?.GetEntity(entityId) as EntityVehicle;
+            if (activeVehicle != null)
+            {
+                return ShoppingCartVisuals.IsShoppingCart(activeVehicle);
+            }
+
+            VehicleManager manager = VehicleManager.Instance;
+            if (manager == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < manager.vehiclesActive.Count; i++)
+            {
+                EntityVehicle vehicle = manager.vehiclesActive[i];
+                if (vehicle != null && vehicle.entityId == entityId)
+                {
+                    return ShoppingCartVisuals.IsShoppingCart(vehicle);
+                }
+            }
+
+            for (int i = 0; i < manager.vehiclesUnloaded.Count; i++)
+            {
+                EntityCreationData vehicle = manager.vehiclesUnloaded[i];
+                if (vehicle != null && vehicle.id == entityId)
+                {
+                    return ShoppingCartVisuals.IsShoppingCartEntityClass(vehicle.entityClass);
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsShoppingCartVehicleWaypoint(Waypoint waypoint)
+        {
+            if (waypoint == null || waypoint.lastKnownPositionEntityType != eLastKnownPositionEntityType.Vehicle)
+            {
+                return false;
+            }
+
+            if (waypoint.lastKnownPositionEntityId != -1 && IsShoppingCartEntityId(waypoint.lastKnownPositionEntityId))
+            {
+                return true;
+            }
+
+            string name = waypoint.name?.Text;
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+
+            string localizedName = Localization.Get(ShoppingCartVisuals.EntityName);
+            return string.Equals(name, ShoppingCartVisuals.EntityName, System.StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(name, "Shopping Cart", System.StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrEmpty(localizedName) &&
+                    !string.Equals(localizedName, ShoppingCartVisuals.EntityName, System.StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(name, localizedName, System.StringComparison.OrdinalIgnoreCase));
         }
 
         private static TagMode GetMode(EntityVehicle vehicle)
