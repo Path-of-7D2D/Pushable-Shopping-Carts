@@ -12,8 +12,7 @@ namespace PushableShoppingCarts
     /// normal on-foot locomotion and the cart is rigidly glued a short distance in
     /// front of them, ground-snapped and facing the player's heading. The vehicle
     /// rigidbody is frozen (kinematic) so the engine's vehicle physics stop fighting
-    /// us, the front wheel is spun by distance travelled, the cart is tilted forward
-    /// onto its wheel (the natural pushing stance, lifting the rear legs), and the
+    /// us, the wheels are spun by distance travelled, and the
     /// player's hands are IK-pinned to the handle grips.
     ///
     /// Driven by <c>sc push [offset] [lift] [tilt]</c> / <c>sc drop</c> for now, so the
@@ -24,7 +23,7 @@ namespace PushableShoppingCarts
         // Tunables - defaults are starting points; dial in-game via `sc push`.
         internal const float DefaultFrontOffset = 1.25f;   // cart root offset; tilted grip ends sit close enough for bent elbows
         internal const float DefaultHeightLift = -0.08f;   // lowered so the aligned cart visual rides near the ground
-        internal const float DefaultTiltDegrees = 15f;     // forward tilt onto the wheel (rear legs lift)
+        internal const float DefaultTiltDegrees = 0f;      // shopping carts stay upright on four wheels
         internal const float GroundClearance = 0.06f;
         internal const int GroundRaycastMask = 1073807360;
         internal const float WheelRadius = 0.235f;         // artist wheel ~0.47m diameter
@@ -33,7 +32,6 @@ namespace PushableShoppingCarts
         internal const float TurnMaxRate = 120f;           // deg/sec cap on how fast the cart can swing
         internal const float MaxTurnOffset = 50f;          // nose may lag at most this far from your facing
         internal const float ToggleGuard = 0.25f;          // debounce so one keypress can't grab+drop
-        internal const float ReleaseRollVelocity = 0.9f;   // rad/sec roll nudge after releasing physics
         internal const string BurdenBuffName = "buffPushableShoppingCartsBurden";
         internal const string BurdenPenaltyCVar = ".shoppingcartMovePenaltyDisplay";
         internal const int FreeFilledSlots = 5;
@@ -166,6 +164,7 @@ namespace PushableShoppingCarts
             lastBeginTime = Time.unscaledTime;
 
             FreezePhysics(vehicle, true);
+            ShoppingCartVisuals.ConfigureStablePhysics(vehicle);
             UpdateBurden(GetPrimaryPlayer(), vehicle);
 
             // Defer hand IK to the first Tick, once the cart is glued in front of the
@@ -192,7 +191,6 @@ namespace PushableShoppingCarts
                 PrepareReleasedVehicle(vehicle, releaseYaw);
                 FreezePhysics(vehicle, false);
                 ReactivateReleasedPhysics(vehicle);
-                NudgeReleasedVehicle(vehicle);
             }
         }
 
@@ -254,7 +252,7 @@ namespace PushableShoppingCarts
             SnapToGround(ref target);
             target.y += HeightLift;
 
-            // Yaw to face the player's heading, then tilt forward onto the wheel.
+            // Yaw to face the player's heading; shopping carts stay upright on four wheels by default.
             Quaternion rotation = Quaternion.Euler(0f, yaw + YawOffset, 0f) * Quaternion.Euler(TiltDegrees, 0f, 0f);
 
             vehicle.SetPosition(target, false);
@@ -477,8 +475,7 @@ namespace PushableShoppingCarts
             Vector3 parkedPosition = vehicle.position;
             SnapToGround(ref parkedPosition);
 
-            Quaternion parkedRotation = Quaternion.Euler(0f, yaw + YawOffset, 0f) *
-                Quaternion.Euler(TiltDegrees, 0f, 0f);
+            Quaternion parkedRotation = Quaternion.Euler(0f, yaw + YawOffset, 0f);
             Vector3 unityPosition = parkedPosition - Origin.position;
 
             vehicle.SetPosition(parkedPosition, false);
@@ -494,6 +491,8 @@ namespace PushableShoppingCarts
                 rb.rotation = parkedRotation;
             }
 
+            ShoppingCartVisuals.ConfigureStablePhysics(vehicle);
+
             Transform model = vehicle.ModelTransform;
             if (model != null)
             {
@@ -505,20 +504,6 @@ namespace PushableShoppingCarts
             {
                 physics.SetPositionAndRotation(unityPosition, parkedRotation);
             }
-        }
-
-        private static void NudgeReleasedVehicle(EntityVehicle vehicle)
-        {
-            Rigidbody rb = vehicle != null ? vehicle.vehicleRB : null;
-            if (rb == null)
-            {
-                return;
-            }
-
-            float rollSign = GetReleaseRollSign(vehicle);
-            Vector3 rollAxis = rb.rotation * Vector3.forward;
-            rb.angularVelocity = rollAxis * rollSign * ReleaseRollVelocity;
-            rb.WakeUp();
         }
 
         private static void ReactivateReleasedPhysics(EntityVehicle vehicle)
@@ -575,11 +560,6 @@ namespace PushableShoppingCarts
             }
 
             return vehicle.rotation.y;
-        }
-
-        private static float GetReleaseRollSign(EntityVehicle vehicle)
-        {
-            return (vehicle.entityId & 1) == 0 ? 1f : -1f;
         }
 
         private static EntityPlayerLocal GetPrimaryPlayer()

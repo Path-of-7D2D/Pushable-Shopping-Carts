@@ -43,7 +43,7 @@
 			<property name="Tags" value="T0,vehicle,vstorage,canHaveCosmetic"/>
 			<property name="DescriptionKey" value="vehicleShoppingCartPlaceableDesc"/>
 			<property name="CustomIcon" value="vehicleShoppingCartPlaceable"/>
-			<property name="Meshfile" value="#@modfolder:Resources/shoppingcart.unity3d?WheelbarrowPrefab.prefab"/>
+			<property name="Meshfile" value="@:Entities/LootContainers/groceryCartEmptyPrefab.prefab"/>
 			<property name="EconomicValue" value="1800"/>
 			<property name="TraderStageTemplate" value="vehicleTier1"/>
 			<property name="SoundPickup" value="bike_grab"/>

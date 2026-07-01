@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using HarmonyLib;
 using UnityEngine;
 using UnityEngine.Scripting;
 
@@ -16,6 +17,9 @@ namespace PushableShoppingCarts
         private const float VisualGroundClearance = 0.08f;
         private const float HandleBackInset = 0.10f;
         private const float HandleBelowTop = 0.12f;
+        private static readonly Vector3 StableBodyColliderCenter = new Vector3(0f, 0.52f, 0.02f);
+        private static readonly Vector3 StableBodyColliderSize = new Vector3(1.05f, 0.92f, 1.45f);
+        private static readonly Vector3 StableCenterOfMass = new Vector3(0f, 0.24f, 0f);
 
         private static readonly Quaternion VisualLocalRotation = Quaternion.Euler(0f, 180f, 0f);
 
@@ -66,6 +70,7 @@ namespace PushableShoppingCarts
 
             root.gameObject.SetActive(true);
             model.gameObject.SetActive(true);
+            ConfigureStablePhysics(vehicle);
             if (vehicle.emodel != null)
             {
                 vehicle.emodel.SetVisible(true, true);
@@ -182,6 +187,33 @@ namespace PushableShoppingCarts
             }
 
             return results;
+        }
+
+        internal static void ConfigureStablePhysics(EntityVehicle vehicle)
+        {
+            if (vehicle == null)
+            {
+                return;
+            }
+
+            Rigidbody rb = vehicle.vehicleRB;
+            if (rb != null)
+            {
+                rb.centerOfMass = StableCenterOfMass;
+                rb.angularDrag = Mathf.Max(rb.angularDrag, 1.2f);
+                if (rb.maxAngularVelocity > 7f)
+                {
+                    rb.maxAngularVelocity = 7f;
+                }
+            }
+
+            Transform physics = vehicle.PhysicsTransform;
+            BoxCollider box = physics != null ? physics.GetComponent<BoxCollider>() : null;
+            if (box != null)
+            {
+                box.center = StableBodyColliderCenter;
+                box.size = StableBodyColliderSize;
+            }
         }
 
         internal static bool IsShoppingCart(EntityVehicle vehicle)
@@ -520,6 +552,20 @@ namespace PushableShoppingCarts
             return position.x.ToString("0.00") + "," +
                 position.y.ToString("0.00") + "," +
                 position.z.ToString("0.00");
+        }
+    }
+
+    [Preserve]
+    [HarmonyPatch(typeof(EntityVehicle), nameof(EntityVehicle.PostInit))]
+    internal static class ShoppingCartVehiclePostInitPatch
+    {
+        [Preserve]
+        private static void Postfix(EntityVehicle __instance)
+        {
+            if (ShoppingCartVisuals.IsShoppingCart(__instance))
+            {
+                ShoppingCartVisuals.RepairVehicle(__instance, false);
+            }
         }
     }
 
