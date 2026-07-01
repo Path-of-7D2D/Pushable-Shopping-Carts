@@ -190,6 +190,7 @@ namespace PushableShoppingCarts
             {
                 PrepareReleasedVehicle(vehicle, releaseYaw);
                 FreezePhysics(vehicle, false);
+                ReactivateReleasedPhysics(vehicle);
                 NudgeReleasedVehicle(vehicle);
             }
         }
@@ -427,6 +428,14 @@ namespace PushableShoppingCarts
 
         private static void FreezePhysics(EntityVehicle vehicle, bool frozen)
         {
+            if (frozen)
+            {
+                vehicle.RBActive = false;
+                vehicle.RBNoDriverGndTime = 0f;
+                vehicle.RBNoDriverSleepTime = 0f;
+                vehicle.isTryToFall = false;
+            }
+
             Rigidbody rb = vehicle.vehicleRB;
             if (rb != null)
             {
@@ -509,6 +518,25 @@ namespace PushableShoppingCarts
             Vector3 rollAxis = rb.rotation * Vector3.forward;
             rb.angularVelocity = rollAxis * rollSign * ReleaseRollVelocity;
             rb.WakeUp();
+        }
+
+        private static void ReactivateReleasedPhysics(EntityVehicle vehicle)
+        {
+            Rigidbody rb = vehicle != null ? vehicle.vehicleRB : null;
+            if (rb == null || vehicle.isEntityRemote)
+            {
+                return;
+            }
+
+            vehicle.RBActive = true;
+            vehicle.RBNoDriverGndTime = 0f;
+            vehicle.RBNoDriverSleepTime = 0f;
+            vehicle.isTryToFall = false;
+            rb.isKinematic = false;
+            rb.WakeUp();
+
+            // Match the vanilla wake path used by VehicleManager.PhysicsWakeNear.
+            vehicle.AddForce(Vector3.zero);
         }
 
         private static void RestorePlayerHands()

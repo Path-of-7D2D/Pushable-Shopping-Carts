@@ -434,10 +434,26 @@ namespace PushableShoppingCarts.Commands
                 ShoppingCartState state = ShoppingCartState.Get(vehicle);
                 Output("Cart " + vehicle.entityId + ": " + state.DisplaySummary() +
                     ", cargoPenalty=" + PushableShoppingCartsPush.CurrentCargoPenalty.ToString("0.00") +
-                    ", conditionPenalty=" + state.ConditionMovePenalty.ToString("0.00"));
+                    ", conditionPenalty=" + state.ConditionMovePenalty.ToString("0.00") +
+                    ", physics=" + GetPhysicsSummary(vehicle));
             }
 
             Output("Debugged " + shoppingCarts.Count + " active shopping cart(s); renderers found on " + repaired + ".");
+        }
+
+        private static string GetPhysicsSummary(EntityVehicle vehicle)
+        {
+            Rigidbody rb = vehicle != null ? vehicle.vehicleRB : null;
+            if (vehicle == null || rb == null)
+            {
+                return "<none>";
+            }
+
+            return "active=" + vehicle.RBActive +
+                ", kinematic=" + rb.isKinematic +
+                ", sleeping=" + rb.IsSleeping() +
+                ", vel=" + rb.velocity.magnitude.ToString("0.000") +
+                ", angVel=" + rb.angularVelocity.magnitude.ToString("0.000");
         }
 
         private static void PushNearest(CommandSenderInfo senderInfo, List<string> parameters)
