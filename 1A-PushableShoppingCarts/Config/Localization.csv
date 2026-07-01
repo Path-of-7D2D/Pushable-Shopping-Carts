@@ -12,7 +12,9 @@ shoppingcartTooltipPush,UI,Use Prompt,,,,{0} to Push {1}
 shoppingcartBlockPush,UI,Use Prompt,,,,Push
 shoppingcartBlockTooltipPush,UI,Use Prompt,,,,Push
 shoppingcartRemoveWheel,UI,Use Prompt,,,,Remove Wheel
-shoppingcartInstallWheel,UI,Use Prompt,,,,Install Wheel
+shoppingcartInstallWheel,UI,Use Prompt,,,,Add Wheel
+entitycommand_shoppingcartRemoveWheel,UI,Use Prompt,,,,Remove Wheel
+entitycommand_shoppingcartInstallWheel,UI,Use Prompt,,,,Add Wheel
 buffPushableShoppingCartsBurdenName,buffs,Buff,,,,Pushing Shopping Cart
 buffPushableShoppingCartsBurdenDesc,buffs,Buff,,,,Pushing the shopping cart slows movement. Missing wheels, bad terrain, rotted frames, and cargo all increase the slowdown.
 buffPushableShoppingCartsBurdenTooltip,buffs,Buff,,,,The shopping cart is slowing you down.
