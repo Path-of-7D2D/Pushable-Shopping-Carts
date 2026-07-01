@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine.Scripting;
 
@@ -36,6 +37,33 @@ namespace PushableShoppingCarts
 
             _addCallback(new EntityActivationCommand(ShoppingCartVehicleCommands.RemoveWheel, ShoppingCartVehicleCommands.RemoveWheelIcon));
             _addCallback(new EntityActivationCommand(ShoppingCartVehicleCommands.InstallWheel, ShoppingCartVehicleCommands.InstallWheelIcon));
+            _addCallback(new EntityActivationCommand(
+                ShoppingCartTagging.ToggleCommand,
+                ShoppingCartTagging.ToggleIcon,
+                null,
+                ShoppingCartTagging.GetCommandTextKey(__instance)));
+        }
+    }
+
+    [Preserve]
+    [HarmonyPatch(typeof(EntityVehicle), nameof(EntityVehicle.ReorderActivationCommands))]
+    internal static class ShoppingCartVehicleCommandOrderPatch
+    {
+        [Preserve]
+        private static void Postfix(EntityVehicle __instance, List<EntityActivationCommand> _commands)
+        {
+            if (!ShoppingCartVisuals.IsShoppingCart(__instance) || _commands == null)
+            {
+                return;
+            }
+
+            for (int i = _commands.Count - 1; i >= 0; i--)
+            {
+                if (ShoppingCartTagging.IsSecurityCommand(_commands[i].commandId))
+                {
+                    _commands.RemoveAt(i);
+                }
+            }
         }
     }
 
@@ -52,6 +80,14 @@ namespace PushableShoppingCarts
             }
 
             string commandId = _command.commandId;
+            if (ShoppingCartTagging.IsSecurityCommand(commandId))
+            {
+                __instance.SetLocked(false);
+                return false;
+            }
+
+            __instance.SetLocked(false);
+
             if (ShoppingCartVehicleCommands.IsRemoveWheel(commandId))
             {
                 HandleWheelCommand(__instance, _playerFocusing, remove: true);
@@ -61,6 +97,12 @@ namespace PushableShoppingCarts
             if (ShoppingCartVehicleCommands.IsInstallWheel(commandId))
             {
                 HandleWheelCommand(__instance, _playerFocusing, remove: false);
+                return false;
+            }
+
+            if (ShoppingCartTagging.IsToggleCommand(commandId))
+            {
+                HandleTagCommand(__instance, _playerFocusing);
                 return false;
             }
 
@@ -111,6 +153,18 @@ namespace PushableShoppingCarts
             ShowTooltip(player, message);
         }
 
+        private static void HandleTagCommand(EntityVehicle vehicle, EntityPlayerLocal player)
+        {
+            bool tagged = !ShoppingCartTagging.IsTagged(vehicle);
+            ShoppingCartTagging.SetTagged(vehicle, tagged, out string message);
+            if (!SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
+            {
+                ShoppingCartSpawnService.SendServerCommand("sc tag " + vehicle.entityId + " " + (tagged ? "on" : "off"));
+            }
+
+            ShowTooltip(player, message);
+        }
+
         private static void ShowTooltip(EntityPlayerLocal player, string message)
         {
             if (player != null && !string.IsNullOrEmpty(message))
@@ -153,11 +207,6 @@ namespace PushableShoppingCarts
                 text += "\n" + state.DisplaySummary();
             }
 
-            if (__instance.IsLockedForLocalPlayer(player))
-            {
-                text = Localization.Get("ttLocked") + "\n" + text;
-            }
-
             __result = text;
         }
 
@@ -170,6 +219,40 @@ namespace PushableShoppingCarts
             }
 
             return entityName;
+        }
+    }
+
+    [Preserve]
+    [HarmonyPatch(typeof(EntityVehicle), nameof(EntityVehicle.IsLockedForLocalPlayer))]
+    internal static class ShoppingCartVehicleLockStatusPatch
+    {
+        [Preserve]
+        private static bool Prefix(EntityVehicle __instance, ref bool __result)
+        {
+            if (!ShoppingCartVisuals.IsShoppingCart(__instance))
+            {
+                return true;
+            }
+
+            __result = false;
+            return false;
+        }
+    }
+
+    [Preserve]
+    [HarmonyPatch(typeof(EntityVehicle), nameof(EntityVehicle.HandleNavObject))]
+    internal static class ShoppingCartVehicleNavObjectPatch
+    {
+        [Preserve]
+        private static bool Prefix(EntityVehicle __instance)
+        {
+            if (!ShoppingCartVisuals.IsShoppingCart(__instance))
+            {
+                return true;
+            }
+
+            ShoppingCartTagging.RefreshNavObject(__instance);
+            return false;
         }
     }
 }

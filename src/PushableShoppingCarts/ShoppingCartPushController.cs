@@ -164,6 +164,7 @@ namespace PushableShoppingCarts
             FreezePhysics(vehicle, true);
             ShoppingCartVisuals.ConfigureStablePhysics(vehicle);
             UpdateBurden(GetPrimaryPlayer(), vehicle);
+            ShoppingCartTagging.AutoTagFixedCartOnPush(vehicle);
 
             // Defer hand IK to the first Tick, once the cart is glued in front of the
             // player, so we can read the grips' real world positions to pick sides.

@@ -29,6 +29,7 @@ C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\1A-PushableShop
 - Interactable shopping carts already found in the world.
 - Damaged world carts with missing wheels and possible rotted frames.
 - Wheel removal and repair actions on the cart interaction wheel.
+- Tag/Untag action for optional compass and on-screen cart icons.
 - Custom item and action-wheel icons.
 - Terrain and cargo movement penalties while pushing.
 
@@ -37,6 +38,16 @@ C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\1A-PushableShop
 Look at a shopping cart and use the normal interaction prompt to push it. Press the interaction key again while pushing to let go.
 
 Shopping carts keep physics when released, so they can settle, tip, or fall naturally after you stop pushing them.
+
+Shopping carts are not lockable and do not have keypad/code options.
+
+## Tagging Carts
+
+Shopping carts can be tagged to show a compass icon and an in-world icon. Use Tag Cart or Untag Cart from the cart interaction wheel.
+
+Fixed carts are automatically tagged the first time you push them. Damaged world carts are not tagged by default, so converting a batch of broken carts will not flood your compass.
+
+If you untag a cart, it stays untagged until you explicitly tag it again.
 
 ## Storage
 
@@ -101,6 +112,7 @@ sc item
 sc wheel 4
 sc world
 sc push
+sc tag
 sc drop
 sc debug
 sc cleanup
@@ -113,6 +125,7 @@ Useful commands:
 - `sc wheel 4` gives four Shopping Cart Wheel items.
 - `sc world` spawns a vanilla world shopping cart block. Look at it and use Push to convert it.
 - `sc push` grabs the nearest active cart for push-position testing.
+- `sc tag` toggles the nearest active cart icon. Use `sc tag on` or `sc tag off` to force a state.
 - `sc drop` releases the currently pushed cart.
 - `sc debug` logs active cart state.
 - `sc cleanup` removes active and unloaded shopping-cart vehicles.

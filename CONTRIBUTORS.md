@@ -51,13 +51,14 @@ Restart 7D2D after DLL, XML, localization, or icon changes. The running client w
 
 ## Mod Content Map
 
-- `Config/entityclasses.xml` defines `vehicleShoppingCart` and points it at the shopping cart vehicle and loot list.
+- `Config/entityclasses.xml` defines `vehicleShoppingCart` and points it at the shopping cart vehicle and loot list. Cart icon tagging is runtime-managed, so this entity class intentionally does not declare `MapIcon` or `NavObject`.
 - `Config/vehicles.xml` defines the vehicle scaffold, storage module, and vehicle tuning.
 - `Config/items.xml` defines `vehicleShoppingCartPlaceable`, `vehicleShoppingCartFrame`, `vehicleShoppingCartHull`, and `vehicleShoppingCartWheel`.
 - `Config/recipes.xml` defines frame, hull, and fixed-cart recipes.
 - `Config/loot.xml` defines the cart storage container as `size="10,2"` for 20 slots.
+- `Config/nav_objects.xml` defines the `shoppingcart` nav object class used only when a cart is explicitly tagged.
 - `Config/buffs.xml` defines the pushing burden buff and displayed penalty cvar.
-- `Config/Localization.csv` defines item names, prompts, wheel commands, and buff text.
+- `Config/Localization.csv` defines item names, prompts, wheel commands, tag commands, and buff text.
 
 ## Source Map
 
@@ -66,7 +67,8 @@ Restart 7D2D after DLL, XML, localization, or icon changes. The running client w
 - `ShoppingCartPushController.cs` owns walk-behind pushing, hand IK, wheel spinning, terrain/cargo/damage penalties, release physics, and push-state validation.
 - `ShoppingCartInputLockPatches.cs` blocks jump/attack while pushing and applies the movement penalty through `EntityPlayerLocal.GetSpeedModifier`.
 - `ShoppingCartState.cs` persists missing-wheel, rotted-frame, and world-cart state in vehicle item metadata under `p7d2d.shoppingcart.v1`.
-- `ShoppingCartInteractPatch.cs` replaces ride/drive activation with push behaviour and adds Remove Wheel/Add Wheel commands.
+- `ShoppingCartTagging.cs` persists tag state under `p7d2d.shoppingcart.tag.v1` and registers or removes the cart nav object.
+- `ShoppingCartInteractPatch.cs` replaces ride/drive activation with push behaviour, removes lock/unlock/keypad commands, and adds Remove Wheel/Add Wheel plus Tag/Untag commands.
 - `ShoppingCartBlockInteractionPatch.cs` adds Push to vanilla `cntShoppingCart*` world blocks and converts those blocks into pushable vehicles.
 - `ShoppingCartWheelActions.cs` validates and applies wheel removal or installation.
 - `ShoppingCartSpawnService.cs` spawns fixed carts, world blocks, and converted carts.
@@ -89,6 +91,8 @@ These values are current implementation details, not public API:
 - Total push movement penalty cap: `0.75`.
 - Push ground clearance: `0.02m`.
 - Default push offset/lift/tilt: `1.25`, `-0.08`, `0`.
+- Tag metadata: `p7d2d.shoppingcart.tag.v1`, with `tagged` and `untagged` explicit states.
+- Tag default: fixed carts auto-tag on first push while still in default tag state; broken carts do not auto-tag; explicitly untagged carts stay untagged until explicitly tagged.
 
 ## In-Game Test Commands
 
@@ -100,6 +104,7 @@ sc item [count]                  give fixed shopping cart item(s)
 sc wheel [count]                 give shopping cart wheel item(s)
 sc world [distance] [blockName]  spawn a vanilla world shopping cart block
 sc push [offset] [lift] [tilt]   push nearest active cart
+sc tag [entityId] [on|off|toggle] tag or untag a cart icon
 sc hands x y z                   tune hand rotation while pushing
 sc handpos x y z                 tune grip-local hand offset while pushing
 sc drop                          release the pushed cart
@@ -115,6 +120,7 @@ sc worldat blockName x y z [rotation]
 sc convert x y z
 sc removewheel entityId
 sc installwheel entityId
+sc tag entityId on|off|toggle
 ```
 
 Useful aliases:
@@ -131,13 +137,17 @@ After a build and game restart, validate the paths touched by your change:
 - `sc item` gives the placeable item, and placement uses the cart preview.
 - Cart storage opens with 20 slots.
 - Push starts from behind the cart and the hands land on the handle.
+- Lock, unlock, and keypad/code actions do not appear for shopping carts.
 - Jump and attack are blocked while pushing.
 - Sprint and walk both respect dirt and sand penalties.
 - Releasing the cart re-enables physics and lets the cart settle naturally.
 - `sc world` creates a world cart block; using Push converts it into a damaged pushable cart.
+- Broken converted carts do not get compass/on-screen icons by default.
+- A fixed cart creates its icon on first push, unless it was explicitly untagged.
+- Tag Cart/Untag Cart toggles the icon, and an explicitly untagged cart remains untagged after release/reload.
 - Remove Wheel works only while holding a wrench, ratchet, or impact driver.
 - Add Wheel consumes one Shopping Cart Wheel and restores a missing wheel.
-- Action-wheel labels localize as `Remove Wheel` and `Add Wheel`.
+- Action-wheel labels localize as `Remove Wheel`, `Add Wheel`, `Tag Cart`, and `Untag Cart`.
 - `sc cleanup` removes active and unloaded shopping cart vehicles.
 
 ## Visual And Physics Notes

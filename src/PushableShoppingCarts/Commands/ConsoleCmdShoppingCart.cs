@@ -34,6 +34,7 @@ namespace PushableShoppingCarts.Commands
                 "  sc wheel [count]                 give shopping cart wheel item(s)\n" +
                 "  sc world [distance] [blockName]  spawn a vanilla world shopping cart block\n" +
                 "  sc push [offset] [lift] [tilt]   push nearest active cart\n" +
+                "  sc tag [entityId] [on|off|toggle] tag or untag a cart icon\n" +
                 "  sc hands x y z                   tune hand rotation while pushing\n" +
                 "  sc handpos x y z                 tune grip-local hand offset while pushing\n" +
                 "  sc drop                          release the pushed cart\n" +
@@ -45,7 +46,8 @@ namespace PushableShoppingCarts.Commands
                 "  sc worldat blockName x y z [rotation]\n" +
                 "  sc convert x y z\n" +
                 "  sc removewheel entityId\n" +
-                "  sc installwheel entityId";
+                "  sc installwheel entityId\n" +
+                "  sc tag entityId on|off|toggle";
         }
 
         public override void Execute(List<string> _params, CommandSenderInfo _senderInfo)
@@ -144,6 +146,12 @@ namespace PushableShoppingCarts.Commands
             if (IsSubcommand(sub, "installwheel"))
             {
                 WheelCommand(_params, _senderInfo, remove: false);
+                return;
+            }
+
+            if (IsSubcommand(sub, "tag") || IsSubcommand(sub, "untag"))
+            {
+                TagCommand(_params, _senderInfo, IsSubcommand(sub, "untag") ? "off" : null);
                 return;
             }
 
@@ -347,6 +355,54 @@ namespace PushableShoppingCarts.Commands
             Output(message ?? (ok ? "Updated shopping cart." : "Could not update shopping cart."));
         }
 
+        private static void TagCommand(List<string> parameters, CommandSenderInfo senderInfo, string forcedMode)
+        {
+            EntityPlayer player = GetSenderPlayer(senderInfo);
+            EntityVehicle vehicle = null;
+            string mode = forcedMode ?? "toggle";
+
+            if (parameters.Count > 1 && int.TryParse(parameters[1], out int entityId))
+            {
+                vehicle = GameManager.Instance?.World?.GetEntity(entityId) as EntityVehicle;
+                if (parameters.Count > 2)
+                {
+                    mode = parameters[2];
+                }
+            }
+            else
+            {
+                if (parameters.Count > 1 && forcedMode == null)
+                {
+                    mode = parameters[1];
+                }
+
+                vehicle = FindNearestShoppingCart(player);
+            }
+
+            if (!ShoppingCartVisuals.IsShoppingCart(vehicle))
+            {
+                Output("No shopping cart found.");
+                return;
+            }
+
+            if (!TryNormalizeTagMode(mode, out string normalizedMode))
+            {
+                Output("Invalid tag mode. Use on, off, or toggle.");
+                return;
+            }
+
+            if (!SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
+            {
+                ApplyTagMode(vehicle, normalizedMode, out string localMessage);
+                ShoppingCartSpawnService.SendServerCommand("sc tag " + vehicle.entityId + " " + normalizedMode);
+                Output(localMessage ?? "Requested shopping cart tag update.");
+                return;
+            }
+
+            ApplyTagMode(vehicle, normalizedMode, out string message);
+            Output(message ?? "Updated shopping cart tag.");
+        }
+
         private static void DropCurrent()
         {
             if (PushableShoppingCartsPush.IsActive)
@@ -520,18 +576,7 @@ namespace PushableShoppingCarts.Commands
             }
 
             List<EntityVehicle> shoppingCarts = ShoppingCartVisuals.GetActiveShoppingCarts();
-            EntityVehicle nearest = null;
-            float nearestSq = float.MaxValue;
-            for (int i = 0; i < shoppingCarts.Count; i++)
-            {
-                EntityVehicle candidate = shoppingCarts[i];
-                float distSq = (candidate.position - player.position).sqrMagnitude;
-                if (distSq < nearestSq)
-                {
-                    nearestSq = distSq;
-                    nearest = candidate;
-                }
-            }
+            EntityVehicle nearest = FindNearestShoppingCart(player, shoppingCarts);
 
             if (nearest == null)
             {
@@ -545,6 +590,77 @@ namespace PushableShoppingCarts.Commands
                 Mathf.Clamp(lift, -0.2f, 1.2f),
                 Mathf.Clamp(tilt, 0f, 45f));
             Output("Now pushing shopping cart " + nearest.entityId + ". Use 'sc drop' to release.");
+        }
+
+        private static EntityVehicle FindNearestShoppingCart(EntityPlayer player)
+        {
+            return FindNearestShoppingCart(player, ShoppingCartVisuals.GetActiveShoppingCarts());
+        }
+
+        private static EntityVehicle FindNearestShoppingCart(EntityPlayer player, List<EntityVehicle> shoppingCarts)
+        {
+            if (player == null || shoppingCarts == null)
+            {
+                return null;
+            }
+
+            EntityVehicle nearest = null;
+            float nearestSq = float.MaxValue;
+            for (int i = 0; i < shoppingCarts.Count; i++)
+            {
+                EntityVehicle candidate = shoppingCarts[i];
+                float distSq = (candidate.position - player.position).sqrMagnitude;
+                if (distSq < nearestSq)
+                {
+                    nearestSq = distSq;
+                    nearest = candidate;
+                }
+            }
+
+            return nearest;
+        }
+
+        private static bool TryNormalizeTagMode(string mode, out string normalizedMode)
+        {
+            normalizedMode = "toggle";
+            if (string.IsNullOrEmpty(mode) ||
+                mode.Equals("toggle", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (mode.Equals("on", StringComparison.OrdinalIgnoreCase) ||
+                mode.Equals("tag", StringComparison.OrdinalIgnoreCase) ||
+                mode.Equals("tagged", StringComparison.OrdinalIgnoreCase))
+            {
+                normalizedMode = "on";
+                return true;
+            }
+
+            if (mode.Equals("off", StringComparison.OrdinalIgnoreCase) ||
+                mode.Equals("untag", StringComparison.OrdinalIgnoreCase) ||
+                mode.Equals("untagged", StringComparison.OrdinalIgnoreCase))
+            {
+                normalizedMode = "off";
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool ApplyTagMode(EntityVehicle vehicle, string normalizedMode, out string message)
+        {
+            if (normalizedMode == "on")
+            {
+                return ShoppingCartTagging.SetTagged(vehicle, true, out message);
+            }
+
+            if (normalizedMode == "off")
+            {
+                return ShoppingCartTagging.SetTagged(vehicle, false, out message);
+            }
+
+            return ShoppingCartTagging.Toggle(vehicle, out message);
         }
 
         private static EntityPlayer GetSenderPlayer(CommandSenderInfo senderInfo)

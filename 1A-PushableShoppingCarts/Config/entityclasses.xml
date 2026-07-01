@@ -19,8 +19,6 @@
 			</property>
 			<property name="RotateToGround" value="true"/>
 			<property name="Faction" value="none"/>
-			<property name="MapIcon" value="ui_game_symbol_shopping_cart"/>
-			<property name="NavObject" value="shoppingcart"/>
 		</entity_class>
 	</append>
 
