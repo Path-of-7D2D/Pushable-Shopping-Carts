@@ -24,7 +24,7 @@ namespace PushableShoppingCarts
         internal const float DefaultFrontOffset = 1.25f;   // cart root offset; tilted grip ends sit close enough for bent elbows
         internal const float DefaultHeightLift = -0.08f;   // lowered so the aligned cart visual rides near the ground
         internal const float DefaultTiltDegrees = 0f;      // shopping carts stay upright on four wheels
-        internal const float GroundClearance = 0.06f;
+        internal const float GroundClearance = 0.02f;
         internal const int GroundRaycastMask = 1073807360;
         internal const float WheelRadius = 0.235f;         // artist wheel ~0.47m diameter
         internal const float YawOffset = 0f;               // cart-forward vs entity-forward (model faces +Z)
