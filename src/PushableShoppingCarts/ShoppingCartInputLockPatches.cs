@@ -27,8 +27,20 @@ namespace PushableShoppingCarts
             if (PushLock.LocksLocalPlayer(__instance) && __instance.movementInput != null)
             {
                 __instance.movementInput.jump = false;
-                PushableShoppingCartsPush.ApplyMovementPenalty(__instance);
             }
+        }
+    }
+
+    // Movement burden must apply after vanilla calculates walk/sprint speed. Sprinting
+    // normalizes the input vector, so scaling movementInput is ignored while running.
+    [Preserve]
+    [HarmonyPatch(typeof(EntityPlayerLocal), nameof(EntityPlayerLocal.GetSpeedModifier))]
+    internal static class Push_ApplySpeedModifier_Patch
+    {
+        [Preserve]
+        private static void Postfix(EntityPlayerLocal __instance, ref float __result)
+        {
+            __result *= PushableShoppingCartsPush.GetMovementSpeedScale(__instance);
         }
     }
 

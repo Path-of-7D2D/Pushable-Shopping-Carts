@@ -83,16 +83,14 @@ namespace PushableShoppingCarts
             return ValidateActiveState(player, true);
         }
 
-        internal static void ApplyMovementPenalty(EntityPlayerLocal player)
+        internal static float GetMovementSpeedScale(EntityPlayerLocal player)
         {
-            if (player == null || player.movementInput == null)
+            if (player == null || !ShouldLockLocalPlayer(player))
             {
-                return;
+                return 1f;
             }
 
-            float scale = Mathf.Clamp01(1f - CurrentMovePenalty);
-            player.movementInput.moveForward *= scale;
-            player.movementInput.moveStrafe *= scale;
+            return Mathf.Clamp01(1f - CurrentMovePenalty);
         }
 
         // Start pushing using the current (possibly console-tuned) stance values.
