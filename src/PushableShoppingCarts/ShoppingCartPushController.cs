@@ -23,7 +23,7 @@ namespace PushableShoppingCarts
     {
         // Tunables - defaults are starting points; dial in-game via `sc push`.
         internal const float DefaultFrontOffset = 1.25f;   // cart root offset; tilted grip ends sit close enough for bent elbows
-        internal const float DefaultHeightLift = 0.2f;     // raise the cart so handles reach hand height
+        internal const float DefaultHeightLift = -0.08f;   // lowered so the aligned cart visual rides near the ground
         internal const float DefaultTiltDegrees = 15f;     // forward tilt onto the wheel (rear legs lift)
         internal const float GroundClearance = 0.06f;
         internal const float WheelRadius = 0.235f;         // artist wheel ~0.47m diameter
