@@ -39,7 +39,7 @@ namespace PushableShoppingCarts
             _addCallback(new EntityActivationCommand(ShoppingCartVehicleCommands.InstallWheel, ShoppingCartVehicleCommands.InstallWheelIcon));
             _addCallback(new EntityActivationCommand(
                 ShoppingCartTagging.ToggleCommand,
-                ShoppingCartTagging.ToggleIcon,
+                ShoppingCartTagging.GetCommandIcon(__instance),
                 null,
                 ShoppingCartTagging.GetCommandTextKey(__instance)));
         }

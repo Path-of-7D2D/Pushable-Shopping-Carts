@@ -5,7 +5,8 @@ namespace PushableShoppingCarts
     internal static class ShoppingCartTagging
     {
         internal const string ToggleCommand = "shoppingcartToggleTag";
-        internal const string ToggleIcon = "ui_game_symbol_shopping_cart";
+        internal const string TagIcon = "shopping_cart_tag";
+        internal const string UntagIcon = "shopping_cart_untag";
         internal const string TagTextKey = "shoppingcartTagCart";
         internal const string UntagTextKey = "shoppingcartUntagCart";
 
@@ -34,6 +35,11 @@ namespace PushableShoppingCarts
         internal static string GetCommandTextKey(EntityVehicle vehicle)
         {
             return IsTagged(vehicle) ? UntagTextKey : TagTextKey;
+        }
+
+        internal static string GetCommandIcon(EntityVehicle vehicle)
+        {
+            return IsTagged(vehicle) ? UntagIcon : TagIcon;
         }
 
         internal static bool IsTagged(EntityVehicle vehicle)
