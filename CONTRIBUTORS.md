@@ -174,6 +174,17 @@ The workflow is manual:
 
 Before publishing, ensure the deployable folder is current and committed.
 
+## Asset Bundle Naming
+
+`shoppingcart.unity3d` must keep shopping-cart-specific internal names. Do not reuse the wheelbarrow bundle asset names, or Unity can treat both mods as loading the same asset when `1A-Wheelbarrow` is installed.
+
+Expected bundle metadata:
+
+- AssetBundle name: `shoppingcart.unity3d`
+- Main prefab container: `assets/shoppingcart/prefabs/shoppingcartmodel.prefab`
+- Root GameObject: `ShoppingCartModel`
+- Entity prefab reference: `#@modfolder:Resources/shoppingcart.unity3d?ShoppingCartModel.prefab`
+
 ## Git Hygiene
 
 Do not commit local generated state:

@@ -5,7 +5,7 @@
 		<entity_class name="vehicleShoppingCart">
 			<property name="Class" value="EntityBicycle"/>
 			<property name="Tags" value="vehicle"/>
-			<property name="Prefab" value="#@modfolder:Resources/shoppingcart.unity3d?WheelbarrowPrefab.prefab"/>
+			<property name="Prefab" value="#@modfolder:Resources/shoppingcart.unity3d?ShoppingCartModel.prefab"/>
 			<property name="PrefabCombined" value="true"/>
 			<property name="ModelType" value="Standard"/>
 			<property name="SurfaceCategory" value="metal"/>
